@@ -1,447 +1,314 @@
-import { Geist } from "next/font/google"
-import { useState, useRef } from "react"
-import LiquidGlass from "liquid-glass-react"
-import { LogOutIcon, Github } from "lucide-react"
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-})
+import { useRef } from "react"
+import LiquidGlass from "../../../liquid-optimized"
+import Link from "next/link"
 
 export default function Home() {
-  // User Info Card Controls
-  const [displacementScale, setDisplacementScale] = useState(100)
-  const [blurAmount, setBlurAmount] = useState(0.5)
-  const [saturation, setSaturation] = useState(140)
-  const [aberrationIntensity, setAberrationIntensity] = useState(2)
-  const [elasticity, setElasticity] = useState(0)
-  const [cornerRadius, setCornerRadius] = useState(32)
-  const [userInfoOverLight, setUserInfoOverLight] = useState(false)
-  const [userInfoMode, setUserInfoMode] = useState<"standard" | "polar" | "prominent" | "shader">("standard")
-
-  // Log Out Button Controls
-  const [logoutDisplacementScale, setLogoutDisplacementScale] = useState(64)
-  const [logoutBlurAmount, setLogoutBlurAmount] = useState(0.1)
-  const [logoutSaturation, setLogoutSaturation] = useState(130)
-  const [logoutAberrationIntensity, setLogoutAberrationIntensity] = useState(2)
-  const [logoutElasticity, setLogoutElasticity] = useState(0.35)
-  const [logoutCornerRadius, setLogoutCornerRadius] = useState(100)
-  const [logoutOverLight, setLogoutOverLight] = useState(false)
-  const [logoutMode, setLogoutMode] = useState<"standard" | "polar" | "prominent" | "shader">("standard")
-
-  // Shared state
-  const [activeTab, setActiveTab] = useState<"userInfo" | "logOut">("userInfo")
   const containerRef = useRef<HTMLDivElement>(null)
-
-  const [scroll, setScroll] = useState(0)
-
-  const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
-    requestAnimationFrame(() => {
-      setScroll((event?.target as any)?.scrollTop)
-    })
-  }
-
-  const scrollingOverBrightSection = scroll > 230 && scroll < 500
 
   return (
     <div
-      className={`${geistSans.className} grid grid-cols-1 grid-rows-2 md:grid-rows-1 md:grid-cols-3 shadow-2xl w-full max-w-5xl mx-auto md:my-10 h-screen md:max-h-[calc(100vh-5rem)] md:rounded-3xl overflow-hidden font-[family-name:var(--font-geist-sans)]`}
+      ref={containerRef}
+      className="min-h-screen w-full overflow-hidden relative"
+      style={{
+        background: "linear-gradient(135deg, #0f0c29 0%, #302b63 40%, #24243e 100%)",
+      }}
     >
-      {/* Left Panel - Glass Effect Demo */}
-      <div className="flex-1 relative overflow-auto min-h-screen md:col-span-2" ref={containerRef} onScroll={handleScroll}>
-        <div className="w-full min-h-[200vh] absolute top-0 left-0 pb-96 mb-96">
-          <img src="https://picsum.photos/2000/2000" className="w-full h-96 object-cover" />
-          <div className="flex flex-col gap-2" id="bright-section">
-            <h2 className="text-2xl font-semibold my-5 text-center">Some Heading</h2>
-            <p className="px-10">
-              Bacon ipsum dolor amet hamburger Bacon ipsum dolor amet hamburger <br />
-              Bacon ipsum dolor amet hamburger Bacon ipsum dolor amet hamburger
-              <br />
-              Bacon ipsum dolor amet hamburger Bacon ipsum dolor amet hamburger
-              <br />
-              Bacon ipsum dolor amet hamburger Bacon ipsum dolor amet hamburger
-              <br />
-              Bacon ipsum dolor amet hamburger Bacon ipsum dolor amet hamburger
-              <br />
-              Bacon ipsum dolor amet hamburger Bacon ipsum dolor amet hamburger
-            </p>
-          </div>
-          <img src="https://picsum.photos/1200/1200" className="w-full h-80 object-cover my-10" />
-          <img src="https://picsum.photos/1400/1300" className="w-full h-72 object-cover my-10" />
-          <img src="https://picsum.photos/1100/1200" className="w-full h-96 object-cover my-10 mb-96" />
-        </div>
+      {/* Animated gradient orbs for background depth */}
+      <div
+        style={{
+          position: "absolute",
+          width: "600px",
+          height: "600px",
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(139,92,246,0.35) 0%, transparent 70%)",
+          top: "-10%",
+          right: "-5%",
+          filter: "blur(60px)",
+          animation: "float1 8s ease-in-out infinite",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          width: "500px",
+          height: "500px",
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(59,130,246,0.3) 0%, transparent 70%)",
+          bottom: "5%",
+          left: "-8%",
+          filter: "blur(50px)",
+          animation: "float2 10s ease-in-out infinite",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          width: "350px",
+          height: "350px",
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(236,72,153,0.25) 0%, transparent 70%)",
+          top: "40%",
+          left: "50%",
+          filter: "blur(40px)",
+          animation: "float3 12s ease-in-out infinite",
+        }}
+      />
 
-        {activeTab === "userInfo" && (
-          <LiquidGlass
-              displacementScale={displacementScale}
-              blurAmount={blurAmount}
-              saturation={saturation}
-              aberrationIntensity={aberrationIntensity}
-              elasticity={elasticity}
-              cornerRadius={cornerRadius}
-              mouseContainer={containerRef}
-              overLight={scrollingOverBrightSection || userInfoOverLight}
-              mode={userInfoMode}
+      {/* Grid pattern overlay */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
+        }}
+      />
+
+      {/* Hero text */}
+      <div
+        style={{
+          position: "absolute",
+          top: "8%",
+          left: "50%",
+          transform: "translateX(-50%)",
+          textAlign: "center",
+          zIndex: 10,
+        }}
+      >
+        <h1
+          style={{
+            fontSize: "clamp(2.5rem, 6vw, 5rem)",
+            fontWeight: 800,
+            letterSpacing: "-0.03em",
+            lineHeight: 1.1,
+            background: "linear-gradient(to bottom right, #ffffff 30%, rgba(255,255,255,0.4))",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            fontFamily: "'SF Pro Display', system-ui, -apple-system, sans-serif",
+          }}
+        >
+          Liquid Glass
+        </h1>
+        <p
+          style={{
+            marginTop: "12px",
+            fontSize: "clamp(0.9rem, 1.5vw, 1.15rem)",
+            color: "rgba(255,255,255,0.45)",
+            fontWeight: 400,
+            letterSpacing: "0.02em",
+            fontFamily: "'SF Pro Text', system-ui, -apple-system, sans-serif",
+          }}
+        >
+          Apple&apos;s Liquid Glass effect for React
+        </p>
+        <Link
+          href="/benchmark"
+          style={{
+            display: "inline-block",
+            marginTop: "20px",
+            padding: "8px 20px",
+            fontSize: "0.85rem",
+            color: "rgba(255,255,255,0.7)",
+            border: "1px solid rgba(255,255,255,0.15)",
+            borderRadius: "999px",
+            textDecoration: "none",
+            transition: "all 0.2s ease",
+            fontFamily: "'SF Pro Text', system-ui, sans-serif",
+          }}
+        >
+          View Benchmark →
+        </Link>
+      </div>
+
+      {/* Glass Card - User Profile */}
+      <LiquidGlass
+        displacementScale={90}
+        blurAmount={0.5}
+        saturation={150}
+        aberrationIntensity={3}
+        elasticity={0.12}
+        cornerRadius={28}
+        mouseContainer={containerRef}
+        style={{
+          position: "absolute",
+          top: "38%",
+          left: "28%",
+        }}
+      >
+        <div style={{ width: "280px", padding: "4px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "16px" }}>
+            <div
               style={{
-                position: "fixed",
-                top: "25%",
-                left: "40%",
+                width: "52px",
+                height: "52px",
+                borderRadius: "16px",
+                background: "linear-gradient(135deg, rgba(139,92,246,0.6), rgba(59,130,246,0.6))",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "20px",
+                fontWeight: 700,
+                color: "white",
+                fontFamily: "system-ui",
               }}
             >
-              <div className="w-72 text-shadow-lg">
-                <h3 className="text-xl font-semibold mb-4">User Info</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-black/10 backdrop-blur rounded-full flex items-center justify-center text-white font-semibold">JD</div>
-                    <div>
-                      <p className="font-medium">John Doe</p>
-                      <p className="text-sm text-white">Software Engineer</p>
-                    </div>
-                  </div>
-                  <div className="pt-2 space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-white">Email:</span>
-                      <span className="text-sm">john.doe@example.com</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-white">Location:</span>
-                      <span className="text-sm">San Francisco, CA</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-white">Joined:</span>
-                      <span className="text-sm">March 2023</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </LiquidGlass>
-        )}
-
-        {activeTab === "logOut" && (
-          <LiquidGlass
-            displacementScale={logoutDisplacementScale}
-            blurAmount={logoutBlurAmount}
-            saturation={logoutSaturation}
-            aberrationIntensity={logoutAberrationIntensity}
-            elasticity={logoutElasticity}
-            cornerRadius={logoutCornerRadius}
-            mouseContainer={containerRef}
-            overLight={scrollingOverBrightSection || logoutOverLight}
-            mode={logoutMode}
-            padding="8px 16px"
-            onClick={() => {
-              console.log("Logged out")
-            }}
-            style={{
-              position: "fixed",
-              top: "20%",
-              left: "40%",
-            }}
-          >
-            <h3 className="text-lg font-medium flex items-center gap-2">
-              Log Out
-              <LogOutIcon className="w-5 h-5" />
-            </h3>
-          </LiquidGlass>
-        )}
-      </div>
-
-      {/* Right Panel - Control Panel */}
-      <div className="row-start-2 rounded-t-3xl md:rounded-none md:col-start-3 bg-gray-900/80 h-full overflow-y-auto backdrop-blur-md border-l border-white/10 p-8 flex flex-col">
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-white">Glassy Boi but Web</h2>
-            <a href="https://github.com/rdev/liquid-glass-react" target="_blank" rel="noopener noreferrer" className="text-white/70 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-lg" title="View on GitHub">
-              <Github className="w-6 h-6" />
-            </a>
+              JD
+            </div>
+            <div>
+              <p style={{ fontWeight: 600, fontSize: "16px", color: "white", fontFamily: "system-ui", margin: 0 }}>
+                John Doe
+              </p>
+              <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.6)", fontFamily: "system-ui", margin: "2px 0 0" }}>
+                Software Engineer
+              </p>
+            </div>
           </div>
-          <p className="text-white/60 text-sm">Liquid Glass container effect for React. With settings and effects and stuff.</p>
-
-          <p className="font-semibold text-yellow-300 text-xs mt-2 leading-snug">⚠️ This doesn't fully work in Safari and Firefox. You will not see edge refraction on non-chromium browsers.</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {[
+              ["Email", "john@example.com"],
+              ["Location", "San Francisco, CA"],
+              ["Status", "Available"],
+            ].map(([label, value]) => (
+              <div key={label} style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", fontFamily: "system-ui" }}>
+                <span style={{ color: "rgba(255,255,255,0.5)" }}>{label}</span>
+                <span style={{ color: "rgba(255,255,255,0.9)" }}>{value}</span>
+              </div>
+            ))}
+          </div>
         </div>
+      </LiquidGlass>
 
-        {/* Tab Switcher */}
-        <div className="flex mb-6 bg-white/5 rounded-lg p-1">
-          <button
-            onClick={() => setActiveTab("userInfo")}
-            className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all ${activeTab === "userInfo" ? "bg-blue-500 text-white shadow-lg" : "text-white/70 hover:text-white hover:bg-white/10"}`}
+      {/* Glass Button */}
+      <LiquidGlass
+        displacementScale={64}
+        blurAmount={0.1}
+        saturation={130}
+        aberrationIntensity={2}
+        elasticity={0.35}
+        cornerRadius={100}
+        padding="10px 28px"
+        mouseContainer={containerRef}
+        onClick={() => console.log("clicked")}
+        style={{
+          position: "absolute",
+          top: "75%",
+          left: "35%",
+        }}
+      >
+        <span style={{ fontFamily: "system-ui", fontWeight: 500, fontSize: "15px", color: "white" }}>
+          Get Started
+        </span>
+      </LiquidGlass>
+
+      {/* Glass Notification */}
+      <LiquidGlass
+        displacementScale={70}
+        blurAmount={0.3}
+        saturation={140}
+        aberrationIntensity={2}
+        elasticity={0.08}
+        cornerRadius={20}
+        padding="14px 20px"
+        mouseContainer={containerRef}
+        style={{
+          position: "absolute",
+          top: "30%",
+          left: "65%",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div
+            style={{
+              width: "36px",
+              height: "36px",
+              borderRadius: "10px",
+              background: "linear-gradient(135deg, rgba(34,197,94,0.7), rgba(16,185,129,0.7))",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "16px",
+            }}
           >
-            User Info Card
-          </button>
-          <button
-            onClick={() => setActiveTab("logOut")}
-            className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all ${activeTab === "logOut" ? "bg-blue-500 text-white shadow-lg" : "text-white/70 hover:text-white hover:bg-white/10"}`}
-          >
-            Log Out Button
-          </button>
+            ✓
+          </div>
+          <div>
+            <p style={{ fontFamily: "system-ui", fontWeight: 600, fontSize: "14px", color: "white", margin: 0 }}>
+              Build Successful
+            </p>
+            <p style={{ fontFamily: "system-ui", fontSize: "12px", color: "rgba(255,255,255,0.5)", margin: "2px 0 0" }}>
+              Deployed to production
+            </p>
+          </div>
         </div>
+      </LiquidGlass>
 
-        <div className="space-y-8 flex-1">
-          {activeTab === "userInfo" && (
-            <>
-              <div>
-                <span className="block text-sm font-semibold text-white/90 mb-3">Refraction Mode</span>
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-3">
-                    <input
-                      type="radio"
-                      id="userInfoModeStandard"
-                      name="userInfoMode"
-                      value="standard"
-                      checked={userInfoMode === "standard"}
-                      onChange={(e) => setUserInfoMode(e.target.value as "standard" | "polar" | "prominent" | "shader")}
-                      className="w-4 h-4 accent-blue-500"
-                    />
-                    <label htmlFor="userInfoModeStandard" className="text-sm text-white/90">
-                      Standard
-                    </label>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <input
-                      type="radio"
-                      id="userInfoModePolar"
-                      name="userInfoMode"
-                      value="polar"
-                      checked={userInfoMode === "polar"}
-                      onChange={(e) => setUserInfoMode(e.target.value as "standard" | "polar" | "prominent" | "shader")}
-                      className="w-4 h-4 accent-blue-500"
-                    />
-                    <label htmlFor="userInfoModePolar" className="text-sm text-white/90">
-                      Polar
-                    </label>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <input
-                      type="radio"
-                      id="userInfoModeProminent"
-                      name="userInfoMode"
-                      value="prominent"
-                      checked={userInfoMode === "prominent"}
-                      onChange={(e) => setUserInfoMode(e.target.value as "standard" | "polar" | "prominent" | "shader")}
-                      className="w-4 h-4 accent-blue-500"
-                    />
-                    <label htmlFor="userInfoModeProminent" className="text-sm text-white/90">
-                      Prominent
-                    </label>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <input
-                      type="radio"
-                      id="userInfoModeShader"
-                      name="userInfoMode"
-                      value="shader"
-                      checked={userInfoMode === "shader"}
-                      onChange={(e) => setUserInfoMode(e.target.value as "standard" | "polar" | "prominent" | "shader")}
-                      className="w-4 h-4 accent-blue-500"
-                    />
-                    <label htmlFor="userInfoModeShader" className="text-sm text-white/90">
-                      Shader (Experimental)
-                    </label>
-                  </div>
-                </div>
-                <p className="text-xs text-white/50 mt-2">Controls the refraction calculation method</p>
-              </div>
-
-              <div>
-                <span className="block text-sm font-semibold text-white/90 mb-3">Displacement Scale</span>
-                <div className="mb-2">
-                  <span className="text-xl font-mono text-blue-300">{displacementScale}</span>
-                </div>
-                <input type="range" min="0" max="200" step="1" value={displacementScale} onChange={(e) => setDisplacementScale(Number(e.target.value))} className="w-full" />
-                <p className="text-xs text-white/50 mt-2">Controls the intensity of edge distortion</p>
-              </div>
-
-              <div>
-                <span className="block text-sm font-semibold text-white/90 mb-3">Blur Amount</span>
-                <div className="mb-2">
-                  <span className="text-xl font-mono text-green-300">{blurAmount.toFixed(1)}</span>
-                </div>
-                <input type="range" min="0" max="1" step="0.01" value={blurAmount} onChange={(e) => setBlurAmount(Number(e.target.value))} className="w-full" />
-                <p className="text-xs text-white/50 mt-2">Controls backdrop blur intensity</p>
-              </div>
-
-              <div>
-                <span className="block text-sm font-semibold text-white/90 mb-3">Saturation</span>
-                <div className="mb-2">
-                  <span className="text-xl font-mono text-purple-300">{saturation}%</span>
-                </div>
-                <input type="range" min="100" max="300" step="10" value={saturation} onChange={(e) => setSaturation(Number(e.target.value))} className="w-full" />
-                <p className="text-xs text-white/50 mt-2">Controls color saturation of the backdrop</p>
-              </div>
-
-              <div>
-                <span className="block text-sm font-semibold text-white/90 mb-3">Chromatic Aberration</span>
-                <div className="mb-2">
-                  <span className="text-xl font-mono text-cyan-300">{aberrationIntensity}</span>
-                </div>
-                <input type="range" min="0" max="20" step="1" value={aberrationIntensity} onChange={(e) => setAberrationIntensity(Number(e.target.value))} className="w-full" />
-                <p className="text-xs text-white/50 mt-2">Controls RGB channel separation intensity</p>
-              </div>
-
-              <div>
-                <span className="block text-sm font-semibold text-white/90 mb-3">Elasticity</span>
-                <div className="mb-2">
-                  <span className="text-xl font-mono text-orange-300">{elasticity.toFixed(2)}</span>
-                </div>
-                <input type="range" min="0" max="1" step="0.05" value={elasticity} onChange={(e) => setElasticity(Number(e.target.value))} className="w-full" />
-                <p className="text-xs text-white/50 mt-2">Controls how much the glass reaches toward the cursor</p>
-              </div>
-
-              <div>
-                <span className="block text-sm font-semibold text-white/90 mb-3">Corner Radius</span>
-                <div className="mb-2">
-                  <span className="text-xl font-mono text-pink-300">{cornerRadius === 999 ? "Full" : `${cornerRadius}px`}</span>
-                </div>
-                <input type="range" min="0" max="100" step="1" value={cornerRadius} onChange={(e) => setCornerRadius(Number(e.target.value))} className="w-full" />
-                <p className="text-xs text-white/50 mt-2">Controls the roundness of the glass corners</p>
-              </div>
-
-              <div>
-                <span className="block text-sm font-semibold text-white/90 mb-3">Over Light</span>
-                <div className="flex items-center space-x-3">
-                  <input type="checkbox" id="userInfoOverLight" checked={userInfoOverLight} onChange={(e) => setUserInfoOverLight(e.target.checked)} className="w-5 h-5 accent-blue-500" />
-                  <label htmlFor="userInfoOverLight" className="text-sm text-white/90">
-                    Tint liquid glass dark (use for bright backgrounds)
-                  </label>
-                </div>
-                <p className="text-xs text-white/50 mt-2">Makes the glass darker for better visibility on light backgrounds</p>
-              </div>
-            </>
-          )}
-
-          {activeTab === "logOut" && (
-            <>
-              <div>
-                <span className="block text-sm font-semibold text-white/90 mb-3">Refraction Mode</span>
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-3">
-                    <input
-                      type="radio"
-                      id="logoutModeStandard"
-                      name="logoutMode"
-                      value="standard"
-                      checked={logoutMode === "standard"}
-                      onChange={(e) => setLogoutMode(e.target.value as "standard" | "polar" | "prominent" | "shader")}
-                      className="w-4 h-4 accent-blue-500"
-                    />
-                    <label htmlFor="logoutModeStandard" className="text-sm text-white/90">
-                      Standard
-                    </label>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <input
-                      type="radio"
-                      id="logoutModePolar"
-                      name="logoutMode"
-                      value="polar"
-                      checked={logoutMode === "polar"}
-                      onChange={(e) => setLogoutMode(e.target.value as "standard" | "polar" | "prominent" | "shader")}
-                      className="w-4 h-4 accent-blue-500"
-                    />
-                    <label htmlFor="logoutModePolar" className="text-sm text-white/90">
-                      Polar
-                    </label>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <input
-                      type="radio"
-                      id="logoutModeProminent"
-                      name="logoutMode"
-                      value="prominent"
-                      checked={logoutMode === "prominent"}
-                      onChange={(e) => setLogoutMode(e.target.value as "standard" | "polar" | "prominent" | "shader")}
-                      className="w-4 h-4 accent-blue-500"
-                    />
-                    <label htmlFor="logoutModeProminent" className="text-sm text-white/90">
-                      Prominent
-                    </label>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <input
-                      type="radio"
-                      id="logoutModeShader"
-                      name="logoutMode"
-                      value="shader"
-                      checked={logoutMode === "shader"}
-                      onChange={(e) => setLogoutMode(e.target.value as "standard" | "polar" | "prominent" | "shader")}
-                      className="w-4 h-4 accent-blue-500"
-                    />
-                    <label htmlFor="logoutModeShader" className="text-sm text-white/90">
-                      Shader
-                    </label>
-                  </div>
-                </div>
-                <p className="text-xs text-white/50 mt-2">Controls the refraction calculation method</p>
-              </div>
-
-              <div>
-                <span className="block text-sm font-semibold text-white/90 mb-3">Displacement Scale</span>
-                <div className="mb-2">
-                  <span className="text-xl font-mono text-blue-300">{logoutDisplacementScale}</span>
-                </div>
-                <input type="range" min="0" max="200" step="1" value={logoutDisplacementScale} onChange={(e) => setLogoutDisplacementScale(Number(e.target.value))} className="w-full" />
-                <p className="text-xs text-white/50 mt-2">Controls the intensity of edge distortion</p>
-              </div>
-
-              <div>
-                <span className="block text-sm font-semibold text-white/90 mb-3">Blur Amount</span>
-                <div className="mb-2">
-                  <span className="text-xl font-mono text-green-300">{logoutBlurAmount.toFixed(1)}</span>
-                </div>
-                <input type="range" min="0" max="1" step="0.01" value={logoutBlurAmount} onChange={(e) => setLogoutBlurAmount(Number(e.target.value))} className="w-full" />
-                <p className="text-xs text-white/50 mt-2">Controls backdrop blur intensity</p>
-              </div>
-
-              <div>
-                <span className="block text-sm font-semibold text-white/90 mb-3">Saturation</span>
-                <div className="mb-2">
-                  <span className="text-xl font-mono text-purple-300">{logoutSaturation}%</span>
-                </div>
-                <input type="range" min="100" max="300" step="10" value={logoutSaturation} onChange={(e) => setLogoutSaturation(Number(e.target.value))} className="w-full" />
-                <p className="text-xs text-white/50 mt-2">Controls color saturation of the backdrop</p>
-              </div>
-
-              <div>
-                <span className="block text-sm font-semibold text-white/90 mb-3">Chromatic Aberration</span>
-                <div className="mb-2">
-                  <span className="text-xl font-mono text-cyan-300">{logoutAberrationIntensity}</span>
-                </div>
-                <input type="range" min="0" max="20" step="1" value={logoutAberrationIntensity} onChange={(e) => setLogoutAberrationIntensity(Number(e.target.value))} className="w-full" />
-                <p className="text-xs text-white/50 mt-2">Controls RGB channel separation intensity</p>
-              </div>
-
-              <div>
-                <span className="block text-sm font-semibold text-white/90 mb-3">Elasticity</span>
-                <div className="mb-2">
-                  <span className="text-xl font-mono text-orange-300">{logoutElasticity.toFixed(2)}</span>
-                </div>
-                <input type="range" min="0" max="1" step="0.05" value={logoutElasticity} onChange={(e) => setLogoutElasticity(Number(e.target.value))} className="w-full" />
-                <p className="text-xs text-white/50 mt-2">Controls how much the glass reaches toward the cursor</p>
-              </div>
-
-              <div>
-                <span className="block text-sm font-semibold text-white/90 mb-3">Corner Radius</span>
-                <div className="mb-2">
-                  <span className="text-xl font-mono text-pink-300">{logoutCornerRadius === 999 ? "Full" : `${logoutCornerRadius}px`}</span>
-                </div>
-                <input type="range" min="0" max="100" step="1" value={logoutCornerRadius} onChange={(e) => setLogoutCornerRadius(Number(e.target.value))} className="w-full" />
-                <p className="text-xs text-white/50 mt-2">Controls the roundness of the glass corners</p>
-              </div>
-
-              <div>
-                <span className="block text-sm font-semibold text-white/90 mb-3">Over Light</span>
-                <div className="flex items-center space-x-3">
-                  <input type="checkbox" id="logoutOverLight" checked={logoutOverLight} onChange={(e) => setLogoutOverLight(e.target.checked)} className="w-5 h-5 accent-blue-500" />
-                  <label htmlFor="logoutOverLight" className="text-sm text-white/90">
-                    Tint liquid glass dark (use for bright backgrounds)
-                  </label>
-                </div>
-                <p className="text-xs text-white/50 mt-2">Makes the glass darker for better visibility on light backgrounds</p>
-              </div>
-            </>
-          )}
+      {/* Glass Music Player */}
+      <LiquidGlass
+        displacementScale={80}
+        blurAmount={0.4}
+        saturation={160}
+        aberrationIntensity={4}
+        elasticity={0.1}
+        cornerRadius={24}
+        mouseContainer={containerRef}
+        style={{
+          position: "absolute",
+          top: "55%",
+          left: "60%",
+        }}
+      >
+        <div style={{ width: "240px", padding: "2px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+            <div
+              style={{
+                width: "48px",
+                height: "48px",
+                borderRadius: "12px",
+                background: "linear-gradient(135deg, #ec4899, #f97316)",
+                flexShrink: 0,
+              }}
+            />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ fontFamily: "system-ui", fontWeight: 600, fontSize: "14px", color: "white", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                Blinding Lights
+              </p>
+              <p style={{ fontFamily: "system-ui", fontSize: "12px", color: "rgba(255,255,255,0.5)", margin: "2px 0 0" }}>
+                The Weeknd
+              </p>
+            </div>
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <span style={{ color: "rgba(255,255,255,0.6)", fontSize: "18px", cursor: "pointer" }}>◀</span>
+              <span style={{ color: "white", fontSize: "22px", cursor: "pointer" }}>▶</span>
+              <span style={{ color: "rgba(255,255,255,0.6)", fontSize: "18px", cursor: "pointer" }}>▶</span>
+            </div>
+          </div>
+          <div style={{ marginTop: "12px", height: "3px", borderRadius: "2px", background: "rgba(255,255,255,0.15)", overflow: "hidden" }}>
+            <div style={{ width: "35%", height: "100%", borderRadius: "2px", background: "linear-gradient(90deg, rgba(236,72,153,0.8), rgba(249,115,22,0.8))" }} />
+          </div>
         </div>
-      </div>
+      </LiquidGlass>
+
+      {/* Keyframe animations */}
+      <style jsx global>{`
+        @keyframes float1 {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(-30px, 20px) scale(1.05); }
+        }
+        @keyframes float2 {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(20px, -25px) scale(1.08); }
+        }
+        @keyframes float3 {
+          0%, 100% { transform: translate(-50%, 0) scale(1); }
+          50% { transform: translate(calc(-50% + 15px), -20px) scale(1.1); }
+        }
+        a:hover {
+          background: rgba(255,255,255,0.08) !important;
+          color: rgba(255,255,255,0.95) !important;
+          border-color: rgba(255,255,255,0.25) !important;
+        }
+      `}</style>
     </div>
   )
 }

@@ -1,6 +1,6 @@
-import { type CSSProperties, forwardRef, memo, useCallback, useEffect, useId, useRef, useState } from "react"
-import { ShaderDisplacementGenerator, fragmentShaders } from "./shader-utils"
-import { displacementMap, polarDisplacementMap, prominentDisplacementMap } from "./utils"
+import { forwardRef, memo, useCallback, useEffect, useId, useRef, useState } from "react"
+import { ShaderDisplacementGenerator, fragmentShaders } from "../src/shader-utils"
+import { displacementMap, polarDisplacementMap, prominentDisplacementMap } from "../src/utils"
 
 // Browser detection - evaluated once at module load
 const IS_FIREFOX = typeof navigator !== "undefined" && navigator.userAgent.toLowerCase().includes("firefox")
@@ -44,7 +44,7 @@ const GlassFilter = memo<{
   mode: "standard" | "polar" | "prominent" | "shader"
   shaderMapUrl?: string
 }>(({ id, displacementScale, aberrationIntensity, width, height, mode, shaderMapUrl }) => (
-  <svg style={{ position: "absolute", width, height, pointerEvents: "none" }} aria-hidden="true">
+  <svg style={{ position: "absolute", width, height }} aria-hidden="true">
     <defs>
       <radialGradient id={`${id}-edge-mask`} cx="50%" cy="50%" r="50%">
         <stop offset="0%" stopColor="black" stopOpacity="0" />
@@ -54,7 +54,6 @@ const GlassFilter = memo<{
       <filter id={id} x="-35%" y="-35%" width="170%" height="170%" colorInterpolationFilters="sRGB">
         <feImage id="feimage" x="0" y="0" width="100%" height="100%" result="DISPLACEMENT_MAP" href={getMap(mode, shaderMapUrl)} preserveAspectRatio="xMidYMid slice" />
 
-        {/* Create edge mask using the displacement map itself */}
         <feColorMatrix
           in="DISPLACEMENT_MAP"
           type="matrix"
@@ -68,10 +67,8 @@ const GlassFilter = memo<{
           <feFuncA type="discrete" tableValues={`0 ${aberrationIntensity * 0.05} 1`} />
         </feComponentTransfer>
 
-        {/* Original undisplaced image for center */}
         <feOffset in="SourceGraphic" dx="0" dy="0" result="CENTER_ORIGINAL" />
 
-        {/* Red channel displacement with slight offset */}
         <feDisplacementMap in="SourceGraphic" in2="DISPLACEMENT_MAP" scale={displacementScale * (mode === "shader" ? 1 : -1)} xChannelSelector="R" yChannelSelector="B" result="RED_DISPLACED" />
         <feColorMatrix
           in="RED_DISPLACED"
@@ -83,7 +80,6 @@ const GlassFilter = memo<{
           result="RED_CHANNEL"
         />
 
-        {/* Green channel displacement */}
         <feDisplacementMap in="SourceGraphic" in2="DISPLACEMENT_MAP" scale={displacementScale * ((mode === "shader" ? 1 : -1) - aberrationIntensity * 0.05)} xChannelSelector="R" yChannelSelector="B" result="GREEN_DISPLACED" />
         <feColorMatrix
           in="GREEN_DISPLACED"
@@ -95,7 +91,6 @@ const GlassFilter = memo<{
           result="GREEN_CHANNEL"
         />
 
-        {/* Blue channel displacement with slight offset */}
         <feDisplacementMap in="SourceGraphic" in2="DISPLACEMENT_MAP" scale={displacementScale * ((mode === "shader" ? 1 : -1) - aberrationIntensity * 0.1)} xChannelSelector="R" yChannelSelector="B" result="BLUE_DISPLACED" />
         <feColorMatrix
           in="BLUE_DISPLACED"
@@ -107,23 +102,18 @@ const GlassFilter = memo<{
           result="BLUE_CHANNEL"
         />
 
-        {/* Combine all channels with screen blend mode for chromatic aberration */}
         <feBlend in="GREEN_CHANNEL" in2="BLUE_CHANNEL" mode="screen" result="GB_COMBINED" />
         <feBlend in="RED_CHANNEL" in2="GB_COMBINED" mode="screen" result="RGB_COMBINED" />
 
-        {/* Add slight blur to soften the aberration effect */}
         <feGaussianBlur in="RGB_COMBINED" stdDeviation={Math.max(0.1, 0.5 - aberrationIntensity * 0.1)} result="ABERRATED_BLURRED" />
 
-        {/* Apply edge mask to aberration effect */}
         <feComposite in="ABERRATED_BLURRED" in2="EDGE_MASK" operator="in" result="EDGE_ABERRATION" />
 
-        {/* Create inverted mask for center */}
         <feComponentTransfer in="EDGE_MASK" result="INVERTED_MASK">
           <feFuncA type="table" tableValues="1 0" />
         </feComponentTransfer>
         <feComposite in="CENTER_ORIGINAL" in2="INVERTED_MASK" operator="in" result="CENTER_CLEAN" />
 
-        {/* Combine edge aberration with clean center */}
         <feComposite in="EDGE_ABERRATION" in2="CENTER_CLEAN" operator="over" />
       </filter>
     </defs>
@@ -182,7 +172,6 @@ const GlassContainer = memo(
       const filterId = useId()
       const [shaderMapUrl, setShaderMapUrl] = useState<string>("")
 
-      // Generate shader displacement map when in shader mode
       useEffect(() => {
         if (mode === "shader") {
           const url = generateShaderDisplacementMap(glassSize.width, glassSize.height)
@@ -193,7 +182,7 @@ const GlassContainer = memo(
       const backdropFilter = `blur(${(overLight ? 12 : 4) + blurAmount * 32}px) saturate(${saturation}%)`
 
       return (
-        <div ref={ref} className={`relative ${className} ${active ? "active" : ""} ${Boolean(onClick) ? "cursor-pointer" : ""}`} style={{ ...style, willChange: "transform", contain: "layout style" }} onClick={onClick}>
+        <div ref={ref} className={`relative ${className} ${active ? "active" : ""} ${Boolean(onClick) ? "cursor-pointer" : ""}`} style={style} onClick={onClick}>
           <GlassFilter mode={mode} id={filterId} displacementScale={displacementScale} aberrationIntensity={aberrationIntensity} width={glassSize.width} height={glassSize.height} shaderMapUrl={shaderMapUrl} />
 
           <div
@@ -206,7 +195,7 @@ const GlassContainer = memo(
               gap: "24px",
               padding,
               overflow: "hidden",
-              transition: "box-shadow 0.2s ease-in-out",
+              transition: "all 0.2s ease-in-out",
               boxShadow: overLight ? "0px 16px 70px rgba(0, 0, 0, 0.75)" : "0px 12px 40px rgba(0, 0, 0, 0.25)",
             }}
             onMouseEnter={onMouseEnter}
@@ -214,24 +203,18 @@ const GlassContainer = memo(
             onMouseDown={onMouseDown}
             onMouseUp={onMouseUp}
           >
-            {/* backdrop layer that gets wiggly */}
             <span
               className="glass__warp"
-              style={
-                {
+              style={{
                   filter: IS_FIREFOX ? undefined : `url(#${filterId})`,
                   backdropFilter,
                   position: "absolute",
                   inset: "0",
-                  willChange: "backdrop-filter",
-                  contain: "strict",
-                } as CSSProperties
-              }
+                }}
             />
 
-            {/* user content stays sharp */}
             <div
-              className="text-white"
+              className="transition-all duration-150 ease-in-out text-white"
               style={{
                 position: "relative",
                 zIndex: 1,
@@ -267,6 +250,7 @@ interface LiquidGlassProps {
   overLight?: boolean
   mode?: "standard" | "polar" | "prominent" | "shader"
   onClick?: () => void
+  onRenderCount?: (count: number) => void
 }
 
 export default function LiquidGlass({
@@ -286,6 +270,7 @@ export default function LiquidGlass({
   style = {},
   mode = "standard",
   onClick,
+  onRenderCount,
 }: LiquidGlassProps) {
   // ---- DOM refs for direct manipulation (bypasses React reconciliation) ----
   const glassRef = useRef<HTMLDivElement>(null)
@@ -307,6 +292,13 @@ export default function LiquidGlass({
   const [isActive, setIsActive] = useState(false)
   const [glassSize, setGlassSize] = useState({ width: 270, height: 69 })
 
+  // Render counting for benchmark
+  const renderCountRef = useRef(0)
+  renderCountRef.current++
+  useEffect(() => {
+    if (onRenderCount) onRenderCount(renderCountRef.current)
+  })
+
   // ---- Mirror infrequent state/props to refs for rAF access ----
   const isActiveRef = useRef(false)
   const glassSizeRef = useRef(glassSize)
@@ -323,7 +315,7 @@ export default function LiquidGlass({
     elasticityRef.current = elasticity
   }, [elasticity])
 
-  // ---- rAF-based DOM update: computes transforms/gradients and writes directly to DOM ----
+  // ---- rAF-based DOM update ----
   const updateDOM = useCallback(() => {
     rafPending.current = false
     const el = glassRef.current
@@ -342,18 +334,15 @@ export default function LiquidGlass({
     const pillWidth = size.width
     const pillHeight = size.height
 
-    // Compute fade-in factor (shared between elastic translation & directional scale)
     const edgeDistX = Math.max(0, Math.abs(gx - pillCenterX) - pillWidth / 2)
     const edgeDistY = Math.max(0, Math.abs(gy - pillCenterY) - pillHeight / 2)
     const edgeDist = Math.sqrt(edgeDistX * edgeDistX + edgeDistY * edgeDistY)
     const activationZone = 200
     const fadeIn = edgeDist > activationZone ? 0 : 1 - edgeDist / activationZone
 
-    // Elastic translation (computed once, was computed 2x in original)
     const elasticX = (gx - pillCenterX) * elast * 0.1 * fadeIn
     const elasticY = (gy - pillCenterY) * elast * 0.1 * fadeIn
 
-    // Directional scale
     let scaleStr = "scale(1)"
     if (gx && gy) {
       const deltaX = gx - pillCenterX
@@ -372,13 +361,11 @@ export default function LiquidGlass({
     const transform = `translate(calc(-50% + ${elasticX}px), calc(-50% + ${elasticY}px)) ${active && hasClick ? "scale(0.96)" : scaleStr}`
     latestTransformRef.current = transform
 
-    // Batch DOM writes: apply transform to all overlay elements
     const elements = [el, olRef1.current, olRef2.current, brRef1.current, brRef2.current, hvRef1.current, hvRef2.current, hvRef3.current]
     for (const elem of elements) {
       if (elem) elem.style.transform = transform
     }
 
-    // Update border gradients (mouse-dependent)
     const angle = 135 + ox * 1.2
     const stop1Pct = Math.max(10, 33 + oy * 0.3)
     const stop2Pct = Math.min(90, 66 + oy * 0.4)
@@ -398,7 +385,7 @@ export default function LiquidGlass({
     requestAnimationFrame(updateDOM)
   }, [updateDOM])
 
-  // ---- Mouse move handler: updates refs only, no setState ----
+  // ---- Mouse move handler ----
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
       const container = mouseContainer?.current || glassRef.current
@@ -420,7 +407,6 @@ export default function LiquidGlass({
     [mouseContainer, scheduleUpdate],
   )
 
-  // Set up mouse tracking if no external mouse position is provided
   useEffect(() => {
     if (externalGlobalMousePos && externalMouseOffset) return
 
@@ -431,7 +417,6 @@ export default function LiquidGlass({
     return () => container.removeEventListener("mousemove", handleMouseMove)
   }, [handleMouseMove, mouseContainer, externalGlobalMousePos, externalMouseOffset])
 
-  // Sync external mouse position to ref and schedule update
   useEffect(() => {
     if (externalGlobalMousePos && externalMouseOffset) {
       mousePosRef.current = {
@@ -444,7 +429,6 @@ export default function LiquidGlass({
     }
   }, [externalGlobalMousePos?.x, externalGlobalMousePos?.y, externalMouseOffset?.x, externalMouseOffset?.y, scheduleUpdate])
 
-  // Update glass size on mount and resize
   useEffect(() => {
     const updateGlassSize = () => {
       if (glassRef.current) {
@@ -458,7 +442,7 @@ export default function LiquidGlass({
     return () => window.removeEventListener("resize", updateGlassSize)
   }, [])
 
-  // ---- Stable callbacks (prevent GlassContainer re-renders) ----
+  // ---- Stable callbacks ----
   const handleMouseEnter = useCallback(() => setIsHovered(true), [])
   const handleMouseLeave = useCallback(() => setIsHovered(false), [])
   const handleMouseDown = useCallback(() => {
@@ -472,21 +456,19 @@ export default function LiquidGlass({
     scheduleUpdate()
   }, [scheduleUpdate])
 
-  // ---- Derived styles ----
   const positionStyles = {
-    position: (style.position || "relative") as CSSProperties["position"],
+    position: (style.position || "relative") as React.CSSProperties["position"],
     top: style.top || "50%",
     left: style.left || "50%",
   }
 
-  const baseTransition = "transform 0.2s ease-out, opacity 0.15s ease-in-out"
+  const baseTransition = "all ease-out 0.2s"
 
   return (
     <>
-      {/* Over light effect */}
       <div
         ref={olRef1}
-        className={`bg-black pointer-events-none ${overLight ? "opacity-20" : "opacity-0"}`}
+        className={`bg-black transition-all duration-150 ease-in-out pointer-events-none ${overLight ? "opacity-20" : "opacity-0"}`}
         style={{
           ...positionStyles,
           height: glassSize.height,
@@ -498,7 +480,7 @@ export default function LiquidGlass({
       />
       <div
         ref={olRef2}
-        className={`bg-black pointer-events-none mix-blend-overlay ${overLight ? "opacity-100" : "opacity-0"}`}
+        className={`bg-black transition-all duration-150 ease-in-out pointer-events-none mix-blend-overlay ${overLight ? "opacity-100" : "opacity-0"}`}
         style={{
           ...positionStyles,
           height: glassSize.height,
@@ -536,7 +518,6 @@ export default function LiquidGlass({
         {children}
       </GlassContainer>
 
-      {/* Border layer 1 */}
       <span
         ref={brRef1}
         style={{
@@ -558,7 +539,6 @@ export default function LiquidGlass({
         }}
       />
 
-      {/* Border layer 2 */}
       <span
         ref={brRef2}
         style={{
@@ -579,7 +559,6 @@ export default function LiquidGlass({
         }}
       />
 
-      {/* Hover effects */}
       {Boolean(onClick) && (
         <>
           <div
@@ -591,7 +570,7 @@ export default function LiquidGlass({
               borderRadius: `${cornerRadius}px`,
               transform: latestTransformRef.current,
               pointerEvents: "none",
-              transition: "transform 0.2s ease-out, opacity 0.2s ease-out",
+              transition: "all 0.2s ease-out",
               opacity: isHovered || isActive ? 0.5 : 0,
               backgroundImage: "radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 50%)",
               mixBlendMode: "overlay",
@@ -606,7 +585,7 @@ export default function LiquidGlass({
               borderRadius: `${cornerRadius}px`,
               transform: latestTransformRef.current,
               pointerEvents: "none",
-              transition: "transform 0.2s ease-out, opacity 0.2s ease-out",
+              transition: "all 0.2s ease-out",
               opacity: isActive ? 0.5 : 0,
               backgroundImage: "radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0) 80%)",
               mixBlendMode: "overlay",
@@ -621,7 +600,7 @@ export default function LiquidGlass({
               borderRadius: `${cornerRadius}px`,
               transform: latestTransformRef.current,
               pointerEvents: "none",
-              transition: "transform 0.2s ease-out, opacity 0.2s ease-out",
+              transition: "all 0.2s ease-out",
               opacity: isHovered ? 0.4 : isActive ? 0.8 : 0,
               backgroundImage: "radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0) 100%)",
               mixBlendMode: "overlay",
