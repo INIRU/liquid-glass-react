@@ -1,12 +1,22 @@
-import { forwardRef, memo, useCallback, useEffect, useId, useRef, useState } from "react"
+import { forwardRef, memo, useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import { ShaderDisplacementGenerator, fragmentShaders } from "../src/shader-utils"
 import { displacementMap, polarDisplacementMap, prominentDisplacementMap } from "../src/utils"
 
 // Browser detection - evaluated once at module load
 const IS_FIREFOX = typeof navigator !== "undefined" && navigator.userAgent.toLowerCase().includes("firefox")
 
-// Generate shader-based displacement map using shaderUtils
+// Default size avoids layout-dependent initialization
+const DEFAULT_GLASS_SIZE = { width: 270, height: 69 }
+
+// Module-level shader map cache - avoids regenerating identical displacement maps
+const shaderMapCache = new Map<string, string>()
+
+// Generate shader-based displacement map using shaderUtils (with caching)
 const generateShaderDisplacementMap = (width: number, height: number): string => {
+  const key = `${width}:${height}`
+  const cached = shaderMapCache.get(key)
+  if (cached) return cached
+
   const generator = new ShaderDisplacementGenerator({
     width,
     height,
@@ -16,6 +26,7 @@ const generateShaderDisplacementMap = (width: number, height: number): string =>
   const dataUrl = generator.updateShader()
   generator.destroy()
 
+  shaderMapCache.set(key, dataUrl)
   return dataUrl
 }
 
@@ -170,14 +181,10 @@ const GlassContainer = memo(
       ref,
     ) => {
       const filterId = useId()
-      const [shaderMapUrl, setShaderMapUrl] = useState<string>("")
-
-      useEffect(() => {
-        if (mode === "shader") {
-          const url = generateShaderDisplacementMap(glassSize.width, glassSize.height)
-          setShaderMapUrl(url)
-        }
-      }, [mode, glassSize.width, glassSize.height])
+      const shaderMapUrl = useMemo(
+        () => (mode === "shader" ? generateShaderDisplacementMap(glassSize.width, glassSize.height) : ""),
+        [mode, glassSize.width, glassSize.height],
+      )
 
       const backdropFilter = `blur(${(overLight ? 12 : 4) + blurAmount * 32}px) saturate(${saturation}%)`
 
@@ -286,11 +293,13 @@ export default function LiquidGlass({
   const mousePosRef = useRef({ gx: 0, gy: 0, ox: 0, oy: 0 })
   const rafPending = useRef(false)
   const latestTransformRef = useRef("translate(-50%, -50%) scale(1)")
+  // Cached rect for fast-path mouse rejection (avoids getBoundingClientRect per mousemove)
+  const cachedRectRef = useRef<{ cx: number; cy: number; ts: number } | null>(null)
 
   // ---- UI state (only infrequent changes trigger re-renders) ----
   const [isHovered, setIsHovered] = useState(false)
   const [isActive, setIsActive] = useState(false)
-  const [glassSize, setGlassSize] = useState({ width: 270, height: 69 })
+  const [glassSize, setGlassSize] = useState(DEFAULT_GLASS_SIZE)
 
   // Render counting for benchmark
   const renderCountRef = useRef(0)
@@ -331,6 +340,9 @@ export default function LiquidGlass({
 
     const pillCenterX = rect.left + rect.width / 2
     const pillCenterY = rect.top + rect.height / 2
+
+    // Keep cached center fresh for fast-path rejection in mousemove handler
+    cachedRectRef.current = { cx: pillCenterX, cy: pillCenterY, ts: performance.now() }
     const pillWidth = size.width
     const pillHeight = size.height
 
@@ -339,6 +351,9 @@ export default function LiquidGlass({
     const edgeDist = Math.sqrt(edgeDistX * edgeDistX + edgeDistY * edgeDistY)
     const activationZone = 200
     const fadeIn = edgeDist > activationZone ? 0 : 1 - edgeDist / activationZone
+
+    // Skip all DOM writes for distant elements — major perf win with many elements
+    if (fadeIn === 0 && !active) return
 
     const elasticX = (gx - pillCenterX) * elast * 0.1 * fadeIn
     const elasticY = (gy - pillCenterY) * elast * 0.1 * fadeIn
@@ -385,15 +400,31 @@ export default function LiquidGlass({
     requestAnimationFrame(updateDOM)
   }, [updateDOM])
 
-  // ---- Mouse move handler ----
+  // ---- Mouse move handler with fast-path rejection ----
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
       const container = mouseContainer?.current || glassRef.current
       if (!container) return
 
+      // Fast-path: use cached element center to reject distant mouse events
+      // without calling getBoundingClientRect (which forces layout recalc)
+      const cached = cachedRectRef.current
+      const now = performance.now()
+      if (cached && now - cached.ts < 500) {
+        const dx = Math.abs(e.clientX - cached.cx)
+        const dy = Math.abs(e.clientY - cached.cy)
+        // If mouse is >350px from cached center, skip entirely
+        if (dx > 350 && dy > 350) return
+      }
+
       const rect = container.getBoundingClientRect()
       const centerX = rect.left + rect.width / 2
       const centerY = rect.top + rect.height / 2
+
+      // Update cached center every 500ms
+      if (!cached || now - cached.ts > 500) {
+        cachedRectRef.current = { cx: centerX, cy: centerY, ts: now }
+      }
 
       mousePosRef.current = {
         gx: e.clientX,
@@ -430,16 +461,27 @@ export default function LiquidGlass({
   }, [externalGlobalMousePos?.x, externalGlobalMousePos?.y, externalMouseOffset?.x, externalMouseOffset?.y, scheduleUpdate])
 
   useEffect(() => {
-    const updateGlassSize = () => {
-      if (glassRef.current) {
-        const rect = glassRef.current.getBoundingClientRect()
-        setGlassSize({ width: rect.width, height: rect.height })
+    const el = glassRef.current
+    if (!el) return
+
+    const ro = new ResizeObserver((entries) => {
+      const entry = entries[0]
+      if (entry) {
+        const { width, height } = entry.contentRect
+        if (width > 0 && height > 0) {
+          setGlassSize({ width: Math.round(width), height: Math.round(height) })
+        }
       }
+    })
+
+    ro.observe(el)
+    // Initial measurement
+    const rect = el.getBoundingClientRect()
+    if (rect.width > 0 && rect.height > 0) {
+      setGlassSize({ width: Math.round(rect.width), height: Math.round(rect.height) })
     }
 
-    updateGlassSize()
-    window.addEventListener("resize", updateGlassSize)
-    return () => window.removeEventListener("resize", updateGlassSize)
+    return () => ro.disconnect()
   }, [])
 
   // ---- Stable callbacks ----

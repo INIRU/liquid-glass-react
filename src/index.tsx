@@ -1,23 +1,32 @@
-import { type CSSProperties, forwardRef, memo, useCallback, useEffect, useId, useRef, useState } from "react"
+import { type CSSProperties, forwardRef, memo, useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import { ShaderDisplacementGenerator, fragmentShaders } from "./shader-utils"
 import { displacementMap, polarDisplacementMap, prominentDisplacementMap } from "./utils"
 
 // Browser detection - evaluated once at module load
 const IS_FIREFOX = typeof navigator !== "undefined" && navigator.userAgent.toLowerCase().includes("firefox")
 
-// Generate shader-based displacement map using shaderUtils
+// Global shader displacement map cache - avoids expensive canvas regeneration for same dimensions
+const shaderMapCache = new Map<string, string>()
+
 const generateShaderDisplacementMap = (width: number, height: number): string => {
+  const key = `${width}:${height}`
+  const cached = shaderMapCache.get(key)
+  if (cached) return cached
+
   const generator = new ShaderDisplacementGenerator({
     width,
     height,
     fragment: fragmentShaders.liquidGlass,
   })
-
   const dataUrl = generator.updateShader()
   generator.destroy()
 
+  shaderMapCache.set(key, dataUrl)
   return dataUrl
 }
+
+// Default glass size constant - prevents new object creation per render
+const DEFAULT_GLASS_SIZE = { width: 270, height: 69 }
 
 const getMap = (mode: "standard" | "polar" | "prominent" | "shader", shaderMapUrl?: string) => {
   switch (mode) {
@@ -173,21 +182,20 @@ const GlassContainer = memo(
         overLight = false,
         cornerRadius = 999,
         padding = "24px 32px",
-        glassSize = { width: 270, height: 69 },
+        glassSize = DEFAULT_GLASS_SIZE,
         onClick,
         mode = "standard",
       },
       ref,
     ) => {
       const filterId = useId()
-      const [shaderMapUrl, setShaderMapUrl] = useState<string>("")
 
-      // Generate shader displacement map when in shader mode
-      useEffect(() => {
+      // Memoized shader map - uses global cache, avoids extra re-render from setState
+      const shaderMapUrl = useMemo(() => {
         if (mode === "shader") {
-          const url = generateShaderDisplacementMap(glassSize.width, glassSize.height)
-          setShaderMapUrl(url)
+          return generateShaderDisplacementMap(glassSize.width, glassSize.height)
         }
+        return ""
       }, [mode, glassSize.width, glassSize.height])
 
       const backdropFilter = `blur(${(overLight ? 12 : 4) + blurAmount * 32}px) saturate(${saturation}%)`
@@ -217,16 +225,14 @@ const GlassContainer = memo(
             {/* backdrop layer that gets wiggly */}
             <span
               className="glass__warp"
-              style={
-                {
+              style={{
                   filter: IS_FIREFOX ? undefined : `url(#${filterId})`,
                   backdropFilter,
-                  position: "absolute",
+                  position: "absolute" as const,
                   inset: "0",
-                  willChange: "backdrop-filter",
+                  willChange: "backdrop-filter" as const,
                   contain: "strict",
-                } as CSSProperties
-              }
+                }}
             />
 
             {/* user content stays sharp */}
@@ -444,18 +450,28 @@ export default function LiquidGlass({
     }
   }, [externalGlobalMousePos?.x, externalGlobalMousePos?.y, externalMouseOffset?.x, externalMouseOffset?.y, scheduleUpdate])
 
-  // Update glass size on mount and resize
+  // Update glass size via ResizeObserver (more efficient than window resize event)
   useEffect(() => {
-    const updateGlassSize = () => {
-      if (glassRef.current) {
-        const rect = glassRef.current.getBoundingClientRect()
-        setGlassSize({ width: rect.width, height: rect.height })
+    const el = glassRef.current
+    if (!el) return
+
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0]
+      if (entry) {
+        const { width, height } = entry.contentRect
+        if (width > 0 && height > 0) {
+          setGlassSize({ width, height })
+        }
       }
+    })
+    observer.observe(el)
+
+    const rect = el.getBoundingClientRect()
+    if (rect.width > 0 && rect.height > 0) {
+      setGlassSize({ width: rect.width, height: rect.height })
     }
 
-    updateGlassSize()
-    window.addEventListener("resize", updateGlassSize)
-    return () => window.removeEventListener("resize", updateGlassSize)
+    return () => observer.disconnect()
   }, [])
 
   // ---- Stable callbacks (prevent GlassContainer re-renders) ----

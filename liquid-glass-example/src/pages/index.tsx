@@ -102,23 +102,40 @@ export default function Home() {
         >
           Apple&apos;s Liquid Glass effect for React
         </p>
-        <Link
-          href="/benchmark"
-          style={{
-            display: "inline-block",
-            marginTop: "20px",
-            padding: "8px 20px",
-            fontSize: "0.85rem",
-            color: "rgba(255,255,255,0.7)",
-            border: "1px solid rgba(255,255,255,0.15)",
-            borderRadius: "999px",
-            textDecoration: "none",
-            transition: "all 0.2s ease",
-            fontFamily: "'SF Pro Text', system-ui, sans-serif",
-          }}
-        >
-          View Benchmark →
-        </Link>
+        <div style={{ display: "flex", gap: "12px", marginTop: "20px", justifyContent: "center" }}>
+          <Link
+            href="/benchmark"
+            style={{
+              display: "inline-block",
+              padding: "8px 20px",
+              fontSize: "0.85rem",
+              color: "rgba(255,255,255,0.7)",
+              border: "1px solid rgba(255,255,255,0.15)",
+              borderRadius: "999px",
+              textDecoration: "none",
+              transition: "all 0.2s ease",
+              fontFamily: "'SF Pro Text', system-ui, sans-serif",
+            }}
+          >
+            Benchmark &#8594;
+          </Link>
+          <Link
+            href="/stress-benchmark"
+            style={{
+              display: "inline-block",
+              padding: "8px 20px",
+              fontSize: "0.85rem",
+              color: "rgba(255,255,255,0.7)",
+              border: "1px solid rgba(255,255,255,0.15)",
+              borderRadius: "999px",
+              textDecoration: "none",
+              transition: "all 0.2s ease",
+              fontFamily: "'SF Pro Text', system-ui, sans-serif",
+            }}
+          >
+            Stress Test &#8594;
+          </Link>
+        </div>
       </div>
 
       {/* Glass Card - User Profile */}
